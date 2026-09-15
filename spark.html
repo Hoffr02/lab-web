@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Idea Spark — Bob’s Song Lab</title>
+  <link rel="icon" href="assets/logo-badge-bsl.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #f4eee4;
+      --paper: #fffaf2;
+      --ink: #14233f;
+      --navy: #0c1b3a;
+      --gold: #d4a017;
+      --line: #e4d8c4;
+      --mute: #5b6780;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", system-ui, sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    header { text-align: center; padding: 16px 16px 8px; }
+    header img { width: min(220px, 70vw); height: auto; }
+    header a.back { display: block; font-size: 13px; color: var(--navy); font-weight: 700; text-decoration: none; margin-top: 6px; }
+    h1 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 26px;
+      text-align: center;
+      color: var(--navy);
+      margin: 8px 16px 4px;
+    }
+    .sub { text-align: center; color: var(--mute); margin: 0 16px 14px; font-size: 15px; }
+    .wrap { max-width: 640px; margin: 0 auto; padding: 0 14px 40px; }
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--mute); display: block; }
+    select {
+      width: 100%;
+      margin-top: 3px;
+      padding: 10px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      font: inherit;
+      color: var(--ink);
+    }
+    .easy {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .actions { display: flex; gap: 8px; margin: 12px 0; }
+    button {
+      font: inherit;
+      font-weight: 700;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 16px;
+      cursor: pointer;
+    }
+    button.primary { flex: 1; background: var(--navy); color: #fff; }
+    button.ghost { background: transparent; color: var(--navy); border: 2px solid var(--navy); }
+    .status { text-align: center; color: var(--mute); font-size: 13px; min-height: 1.2em; }
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px 16px;
+      margin-top: 10px;
+    }
+    .meta { font-size: 13px; color: var(--mute); margin: 0 0 8px; }
+    .chords {
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(22px, 6vw, 32px);
+      color: var(--navy);
+      margin: 0 0 10px;
+      line-height: 1.25;
+    }
+    .row { margin: 0 0 8px; }
+    .row b { color: var(--navy); }
+    .hidden { display: none; }
+    .note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--mute);
+    }
+    .note a { color: var(--navy); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html"><img src="assets/logo-wordmark-cream.jpg" alt="Bob’s Song Lab" /></a>
+    <a class="back" href="index.html">← Lab home</a>
+  </header>
+  <h1>Idea Spark</h1>
+  <p class="sub">14,000 song seeds. Tap Spark. Copy what you like into Notes. Your music only.</p>
+
+  <div class="wrap">
+    <div class="filters">
+      <div>
+        <label for="genre">Genre</label>
+        <select id="genre"></select>
+      </div>
+      <div>
+        <label for="tuning">Tuning</label>
+        <select id="tuning"></select>
+      </div>
+      <div>
+        <label for="mode">Mode</label>
+        <select id="mode"></select>
+      </div>
+      <div>
+        <label for="voicing">Voicing</label>
+        <select id="voicing"></select>
+      </div>
+      <label class="easy"><input type="checkbox" id="easy" checked /> Easy open-chord keys first (C G D A E Am Em)</label>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="spark" type="button">Spark an idea</button>
+      <button class="ghost" id="copy" type="button">Copy to Notes</button>
+    </div>
+    <p class="status" id="status">Loading the idea bank…</p>
+
+    <article class="card hidden" id="card">
+      <p class="meta" id="meta"></p>
+      <p class="chords" id="chords"></p>
+      <p class="row" id="nashville"></p>
+      <p class="row" id="keyline"></p>
+      <p class="row" id="tuningline"></p>
+      <p class="row" id="capoline"></p>
+      <p class="row" id="playlist"></p>
+      <p class="row" id="feel"></p>
+    </article>
+
+    <p class="note">Need a faster three-chord shuffle? That’s still live as <a href="https://hoffr02.github.io/BobsSongLab/">Songwriting Spark</a>. This page is the full bank — Nashville, capo, and tunings included.</p>
+  </div>
+
+  <script>
+    const EASY_TONIC = new Set(['C','G','D','A','E','Am','Em','Dm']);
+    let ALL = [];
+    let current = null;
+
+    const $ = (id) => document.getElementById(id);
+    const fillSelect = (id, values) => {
+      const el = $(id);
+      el.innerHTML = '<option value="">Any</option>' + values.map(v => `<option>${v}</option>`).join('');
+    };
+
+    async function loadBank() {
+      try {
+        const res = await fetch('ideas.json.gz');
+        if (!res.ok) throw new Error('gz missing');
+        const ds = new DecompressionStream('gzip');
+        const stream = res.body.pipeThrough(ds);
+        const text = await new Response(stream).text();
+        ALL = JSON.parse(text);
+      } catch (err) {
+        try {
+          const res = await fetch('ideas.json');
+          if (!res.ok) throw new Error('json missing');
+          ALL = await res.json();
+        } catch (err2) {
+          const res = await fetch('ideas-lite.json');
+          ALL = await res.json();
+        }
+      }
+      const uniq = (key) => [...new Set(ALL.map(x => x[key]))].sort();
+      fillSelect('genre', uniq('genre'));
+      fillSelect('tuning', uniq('tuning'));
+      fillSelect('mode', uniq('mode'));
+      fillSelect('voicing', uniq('voicing'));
+      $('status').textContent = ALL.length.toLocaleString() + ' ideas ready.';
+      spark();
+    }
+
+    function pool() {
+      const genre = $('genre').value;
+      const tuning = $('tuning').value;
+      const mode = $('mode').value;
+      const voicing = $('voicing').value;
+      const easy = $('easy').checked;
+      return ALL.filter(x => {
+        if (genre && x.genre !== genre) return false;
+        if (tuning && x.tuning !== tuning) return false;
+        if (mode && x.mode !== mode) return false;
+        if (voicing && x.voicing !== voicing) return false;
+        if (easy) {
+          const tonic = String(x.tonic || '').trim();
+          const key = String(x.key || '').toLowerCase();
+          const hit = EASY_TONIC.has(tonic)
+            || /^(c|g|d|a|e) major$/.test(key)
+            || /^(a|e|d) minor$/.test(key);
+          if (!hit) return false;
+        }
+        return true;
+      });
+    }
+
+    function spark() {
+      let list = pool();
+      if (!list.length && $('easy').checked) {
+        $('easy').checked = false;
+        list = pool();
+      }
+      if (!list.length) {
+        $('status').textContent = 'Nothing in that filter. Loosen one menu.';
+        return;
+      }
+      current = list[Math.floor(Math.random() * list.length)];
+      show(current);
+      $('status').textContent = list.length.toLocaleString() + ' ideas in this filter · #' + current.id;
+    }
+
+    function show(x) {
+      $('card').classList.remove('hidden');
+      $('meta').textContent = `Idea #${String(x.id).padStart(5,'0')}  ·  ${x.genre}  ·  ${x.pattern}  ·  ${x.voicing}`;
+      $('chords').textContent = x.chords;
+      $('nashville').innerHTML = `<b>Nashville</b> ${x.nashville} &nbsp;·&nbsp; <b>Roman</b> ${x.roman}`;
+      $('keyline').innerHTML = `<b>Key</b> ${x.key} &nbsp;·&nbsp; <b>Mode</b> ${x.mode} &nbsp;·&nbsp; <b>Scale</b> ${x.scale}`;
+      $('tuningline').innerHTML = `<b>Tuning</b> ${x.tuning}`;
+      $('capoline').innerHTML = `<b>Capo</b> ${x.capo}<br><span style="color:#5b6780">${x.capoAll}</span>`;
+      $('playlist').innerHTML = `<b>How to play</b> ${x.play}`;
+      $('feel').innerHTML = `<b>Feel</b> ${x.feel}${x.also ? ' · also fits ' + x.also : ''}`;
+    }
+
+    function copyBlock() {
+      if (!current) return;
+      const x = current;
+      const text = [
+        `BOB'S SONG LAB — Idea #${x.id}`,
+        `Chords: ${x.chords}`,
+        `Nashville: ${x.nashville}`,
+        `Roman: ${x.roman}`,
+        `Key: ${x.key} | Mode: ${x.mode} | Scale: ${x.scale}`,
+        `Tuning: ${x.tuning}`,
+        `Capo: ${x.capo}`,
+        `Capo options: ${x.capoAll}`,
+        `How to play: ${x.play}`,
+        `Genre: ${x.genre} (also ${x.also})`,
+        `Pattern: ${x.pattern} | Voicing: ${x.voicing}`,
+        `Feel: ${x.feel}`,
+        ``,
+        `Your music only. BobsSongLab.com`
+      ].join('\n');
+      const done = () => { $('copy').textContent = 'Copied'; setTimeout(() => $('copy').textContent = 'Copy to Notes', 1400); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallback(text, done));
+      } else fallback(text, done);
+    }
+
+    function fallback(text, done) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      done();
+    }
+
+    $('spark').addEventListener('click', spark);
+    $('copy').addEventListener('click', copyBlock);
+    ['genre','tuning','mode','voicing','easy'].forEach(id => $(id).addEventListener('change', () => {
+      $('status').textContent = pool().length.toLocaleString() + ' ideas in this filter.';
+    }));
+    loadBank();
+  </script>
+</body>
+</html>
