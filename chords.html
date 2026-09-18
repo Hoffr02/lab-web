@@ -67,6 +67,15 @@
         <label for="qual">Quality</label>
         <select id="qual"><option value="">Any</option></select>
       </div>
+      <div class="wide">
+        <label for="fam">Family</label>
+        <select id="fam">
+          <option value="">All</option>
+          <option value="triad">Triads + inversions</option>
+          <option value="power">Power chords</option>
+          <option value="extended">7ths / color</option>
+        </select>
+      </div>
     </div>
     <div id="status" class="meta"></div>
     <div id="list" class="list"></div>
@@ -129,6 +138,17 @@
           ${drawNet(p.frets)}
           <p>${p.label}<br>${p.tab}</p>
         </div>`).join('');
+      let triads = '';
+      if (c.triad_sets && c.triad_sets.length) {
+        triads = `<p class="row" style="margin-top:16px"><b>Three-string triads</b> — same three notes, four string sets, three inversions.</p>`;
+        c.triad_sets.forEach(set => {
+          triads += `<p class="meta">${set.set}</p><div class="positions">`;
+          set.shapes.forEach(s => {
+            triads += `<div class="pos"><h3>${s.inversion}</h3>${drawNet(s.frets)}<p>${s.tab}</p></div>`;
+          });
+          triads += `</div>`;
+        });
+      }
       $('card').innerHTML = `
         <div class="card">
           <p class="name">${c.name}</p>
@@ -139,6 +159,7 @@
           <p class="row">${c.feel}</p>
           <p class="row compat"><b>Sits well with</b> ${comps}</p>
           <div class="positions">${pos}</div>
+          ${triads}
         </div>`;
       $('card').scrollIntoView({behavior:'smooth', block:'start'});
     }
@@ -147,9 +168,11 @@
       const q = norm($('q').value);
       const root = $('root').value;
       const qual = $('qual').value;
+      const fam = $('fam').value;
       return BANK.filter(c => {
         if (root && c.root !== root) return false;
         if (qual && c.quality !== qual) return false;
+        if (fam && c.family !== fam) return false;
         if (q && !norm(c.name).includes(q) && !norm(c.quality_label).includes(q)) return false;
         return true;
       });
@@ -186,6 +209,7 @@
     $('q').addEventListener('change', () => { const hit = findName($('q').value); if (hit) show(hit); });
     $('root').addEventListener('change', renderList);
     $('qual').addEventListener('change', renderList);
+    $('fam').addEventListener('change', renderList);
     $('list').addEventListener('click', e => {
       const a = e.target.closest('a');
       if (!a) return;
