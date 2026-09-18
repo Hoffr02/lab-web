@@ -93,6 +93,7 @@
       margin: 0 0 10px;
       line-height: 1.25;
     }
+    .chords a { color: var(--navy); text-decoration: none; border-bottom: 2px solid #d4a017; }
     .row { margin: 0 0 8px; }
     .row b { color: var(--navy); }
     .hidden { display: none; }
@@ -232,7 +233,11 @@
     function show(x) {
       $('card').classList.remove('hidden');
       $('meta').textContent = `Idea #${String(x.id).padStart(5,'0')}  ·  ${x.genre}  ·  ${x.pattern}  ·  ${x.voicing}`;
-      $('chords').textContent = x.chords;
+      $('chords').innerHTML = String(x.chords || '').split(/\s*[–—-]\s*/).map(ch => {
+        const name = ch.trim();
+        if (!name) return '';
+        return `<a href="chords.html?q=${encodeURIComponent(name)}">${name}</a>`;
+      }).join(' – ');
       $('nashville').innerHTML = `<b>Nashville</b> ${x.nashville} &nbsp;·&nbsp; <b>Roman</b> ${x.roman}`;
       $('keyline').innerHTML = `<b>Key</b> ${x.key} &nbsp;·&nbsp; <b>Mode</b> ${x.mode} &nbsp;·&nbsp; <b>Scale</b> ${x.scale}`;
       $('tuningline').innerHTML = `<b>Tuning</b> ${x.tuning}`;

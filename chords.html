@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chord Reference — Bob’s Song Lab</title>
+  <link rel="icon" href="assets/logo-badge-bsl.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --cream:#f4eee4; --paper:#fffaf2; --ink:#14233f; --navy:#0c1b3a; --gold:#d4a017; --line:#e4d8c4; --mute:#5b6780; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Source Sans 3",system-ui,sans-serif; background:var(--cream); color:var(--ink); line-height:1.5; }
+    header { text-align:center; padding:16px 16px 8px; }
+    header img { width:min(220px,70vw); height:auto; }
+    header a.back { display:block; font-size:13px; color:var(--navy); font-weight:700; text-decoration:none; margin-top:6px; }
+    h1 { font-family:Fraunces,Georgia,serif; font-size:26px; text-align:center; color:var(--navy); margin:8px 16px 4px; }
+    .sub { text-align:center; color:var(--mute); margin:0 16px 14px; font-size:15px; }
+    .wrap { max-width:720px; margin:0 auto; padding:0 14px 48px; }
+    input[type=search], select {
+      width:100%; padding:12px; border-radius:12px; border:1px solid var(--line);
+      background:var(--paper); font:inherit; color:var(--ink); margin-top:4px;
+    }
+    .filters { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+    .filters .wide { grid-column:1/-1; }
+    label { font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--mute); }
+    .list { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 18px; }
+    .chip {
+      background:var(--paper); border:1px solid var(--line); border-radius:999px;
+      padding:8px 12px; font-weight:700; color:var(--navy); text-decoration:none; font-size:14px;
+    }
+    .chip:hover { border-color:var(--navy); }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:18px 16px; margin-top:12px; }
+    .name { font-family:Fraunces,Georgia,serif; font-size:36px; color:var(--navy); margin:0 0 6px; }
+    .meta { color:var(--mute); font-size:14px; margin:0 0 10px; }
+    .row { margin:0 0 8px; }
+    .row b { color:var(--navy); }
+    .compat a { color:var(--navy); font-weight:700; text-decoration:none; margin-right:10px; }
+    .positions { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-top:14px; }
+    .pos { background:var(--cream); border-radius:14px; padding:10px 8px 8px; text-align:center; }
+    .pos h3 { margin:0 0 4px; font-size:13px; color:var(--navy); }
+    .pos p { margin:4px 0 0; font-size:11px; color:var(--mute); }
+    svg.fret { width:100%; height:auto; display:block; }
+    .note { margin-top:18px; font-size:13px; color:var(--mute); }
+    .note a { color:var(--navy); font-weight:700; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html"><img src="assets/logo-wordmark-cream.jpg" alt="Bob’s Song Lab" /></a>
+    <a class="back" href="index.html">← Lab home</a>
+  </header>
+  <h1>Chord Reference</h1>
+  <p class="sub">Name, five positions, typical key, mode, and neighbors. Tap a chord on Spark and land here. Your photos plug in when the folder is ready.</p>
+  <div class="wrap">
+    <div class="filters">
+      <div class="wide">
+        <label for="q">Search</label>
+        <input id="q" type="search" placeholder="Am, F#7, Cadd9…" />
+      </div>
+      <div>
+        <label for="root">Root</label>
+        <select id="root"><option value="">Any</option></select>
+      </div>
+      <div>
+        <label for="qual">Quality</label>
+        <select id="qual"><option value="">Any</option></select>
+      </div>
+    </div>
+    <div id="status" class="meta"></div>
+    <div id="list" class="list"></div>
+    <div id="card"></div>
+    <p class="note">Positions are five common guitar voicings from the nut toward the body — the same idea as your five-place library. Keys, modes, and genres are <b>typical starting points</b>, not laws. When your diagram folder is in, each box can show your photo instead of the drawn net.<br><a href="spark.html">Back to Idea Spark →</a></p>
+  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    let BANK = [];
+    const params = new URLSearchParams(location.search);
+    const hash = decodeURIComponent((location.hash || '').replace('#','')).trim();
+
+    function norm(s) {
+      return String(s || '').replace(/♯/g,'#').replace(/♭/g,'b').replace(/\s+/g,'').toLowerCase();
+    }
+
+    function drawNet(frets) {
+      const strings = 6, visible = 5;
+      const sounded = frets.filter(f => f >= 0);
+      const base = sounded.length ? Math.max(0, Math.min(...sounded) >= 3 ? Math.min(...sounded) : 0) : 0;
+      const start = base <= 2 ? 0 : base;
+      const W = 140, H = 168, l = 18, r = 122, t = 28, b = 150;
+      const xs = [...Array(strings)].map((_,i) => l + i * (r-l)/(strings-1));
+      let dots = '', mutes = '', opens = '', nums = '';
+      frets.forEach((f, si) => {
+        const x = xs[si];
+        if (f < 0) mutes += `<text x="${x}" y="16" text-anchor="middle" font-size="11" fill="#14233f">×</text>`;
+        else if (f === 0 && start === 0) opens += `<circle cx="${x}" cy="16" r="4.5" fill="none" stroke="#14233f" stroke-width="1.4"/>`;
+        else {
+          const rel = f - start;
+          if (rel >= 1 && rel <= visible) {
+            const y = t + (rel - 0.5) * ((b-t)/visible);
+            dots += `<circle cx="${x}" cy="${y}" r="7" fill="#0c1b3a"/>`;
+          }
+        }
+      });
+      if (start > 0) nums += `<text x="8" y="${t + 0.7*((b-t)/visible)}" font-size="10" fill="#5b6780">${start+1}</text>`;
+      let lines = `<line x1="${l}" y1="${t}" x2="${r}" y2="${t}" stroke="#0c1b3a" stroke-width="${start===0?4:1.5}"/>`;
+      for (let i=1;i<=visible;i++) {
+        const y = t + i * ((b-t)/visible);
+        lines += `<line x1="${l}" y1="${y}" x2="${r}" y2="${y}" stroke="#8a7a62" stroke-width="1"/>`;
+      }
+      xs.forEach(x => { lines += `<line x1="${x}" y1="${t}" x2="${x}" y2="${b}" stroke="#14233f" stroke-width="1.3"/>`; });
+      return `<svg class="fret" viewBox="0 0 ${W} ${H}" aria-hidden="true">${lines}${mutes}${opens}${dots}${nums}</svg>`;
+    }
+
+    function findName(name) {
+      const n = norm(name);
+      return BANK.find(c => norm(c.name) === n)
+        || BANK.find(c => norm(c.name.replace('maj','')) === n);
+    }
+
+    function show(c) {
+      if (!c) { $('card').innerHTML = '<p class="meta">No match. Try C, Am, or F#7.</p>'; return; }
+      history.replaceState(null,'', `chords.html?q=${encodeURIComponent(c.name)}`);
+      const comps = (c.compatible||[]).map(n => `<a href="chords.html?q=${encodeURIComponent(n)}">${n}</a>`).join(' ');
+      const pos = c.positions.map(p => `
+        <div class="pos">
+          <h3>Place ${p.n}</h3>
+          ${drawNet(p.frets)}
+          <p>${p.label}<br>${p.tab}</p>
+        </div>`).join('');
+      $('card').innerHTML = `
+        <div class="card">
+          <p class="name">${c.name}</p>
+          <p class="meta">${c.quality_label} · ${c.root}</p>
+          <p class="row"><b>Typical keys</b> ${(c.keys||[]).join(' · ')}</p>
+          <p class="row"><b>Mode color</b> ${c.mode}</p>
+          <p class="row"><b>Often heard in</b> ${(c.genres||[]).join(', ')}</p>
+          <p class="row">${c.feel}</p>
+          <p class="row compat"><b>Sits well with</b> ${comps}</p>
+          <div class="positions">${pos}</div>
+        </div>`;
+      $('card').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    function filtered() {
+      const q = norm($('q').value);
+      const root = $('root').value;
+      const qual = $('qual').value;
+      return BANK.filter(c => {
+        if (root && c.root !== root) return false;
+        if (qual && c.quality !== qual) return false;
+        if (q && !norm(c.name).includes(q) && !norm(c.quality_label).includes(q)) return false;
+        return true;
+      });
+    }
+
+    function renderList() {
+      const list = filtered();
+      $('status').textContent = list.length + ' chords';
+      $('list').innerHTML = list.slice(0, 48).map(c =>
+        `<a class="chip" href="chords.html?q=${encodeURIComponent(c.name)}">${c.name}</a>`
+      ).join('') + (list.length > 48 ? '<span class="meta">Narrow the search to see the rest.</span>' : '');
+    }
+
+    fetch('chords.json').then(r => r.json()).then(data => {
+      BANK = data.chords || [];
+      const roots = [...new Set(BANK.map(c => c.root))];
+      const quals = [...new Set(BANK.map(c => c.quality))];
+      roots.forEach(r => { const o=document.createElement('option'); o.value=r; o.textContent=r; $('root').appendChild(o); });
+      quals.forEach(q => { const o=document.createElement('option'); o.value=q; o.textContent=q; $('qual').appendChild(o); });
+      const start = params.get('q') || hash;
+      if (start) {
+        $('q').value = start;
+        const hit = findName(start);
+        if (hit) show(hit);
+      }
+      renderList();
+    }).catch(() => { $('status').textContent = 'Could not load chords.json'; });
+
+    $('q').addEventListener('input', () => {
+      renderList();
+      const hit = findName($('q').value);
+      if (hit) show(hit);
+    });
+    $('q').addEventListener('change', () => { const hit = findName($('q').value); if (hit) show(hit); });
+    $('root').addEventListener('change', renderList);
+    $('qual').addEventListener('change', renderList);
+    $('list').addEventListener('click', e => {
+      const a = e.target.closest('a');
+      if (!a) return;
+      e.preventDefault();
+      const name = new URL(a.href, location.href).searchParams.get('q');
+      const hit = findName(name);
+      if (hit) { $('q').value = hit.name; show(hit); }
+    });
+  </script>
+</body>
+</html>
