@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Word Spark — Bob’s Song Lab</title>
+  <link rel="icon" href="assets/logo-badge-bsl.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --cream:#f4eee4; --paper:#fffaf2; --ink:#14233f; --navy:#0c1b3a; --gold:#d4a017; --line:#e4d8c4; --mute:#5b6780; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Source Sans 3",system-ui,sans-serif; background:var(--cream); color:var(--ink); line-height:1.45; }
+    header { text-align:center; padding:16px 16px 8px; }
+    header img { width:min(220px,70vw); height:auto; }
+    header a.back { display:block; font-size:13px; color:var(--navy); font-weight:700; text-decoration:none; margin-top:6px; }
+    h1 { font-family:Fraunces,Georgia,serif; font-size:26px; text-align:center; color:var(--navy); margin:8px 16px 4px; }
+    .sub { text-align:center; color:var(--mute); margin:0 16px 14px; font-size:15px; }
+    .wrap { max-width:720px; margin:0 auto; padding:0 14px 48px; }
+    label { font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--mute); display:block; }
+    input, select { width:100%; margin-top:4px; padding:11px; border-radius:12px; border:1px solid var(--line); background:var(--paper); font:inherit; color:var(--ink); }
+    .filters { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+    .filters .wide { grid-column:1 / -1; }
+    .actions { display:flex; gap:8px; margin:10px 0 8px; }
+    button { font:inherit; font-weight:700; border:0; border-radius:999px; padding:12px 16px; cursor:pointer; }
+    button.primary { flex:1; background:var(--navy); color:#fff; }
+    button.ghost { background:transparent; color:var(--navy); border:2px solid var(--navy); }
+    .status { text-align:center; color:var(--mute); font-size:13px; min-height:1.2em; }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:16px; margin-top:10px; }
+    .phrase { font-family:Fraunces,Georgia,serif; font-size:22px; color:var(--navy); margin:0 0 8px; }
+    .meta { font-size:13px; color:var(--mute); margin:0 0 6px; }
+    .lesson { margin:0; }
+    .tags { margin-top:8px; }
+    .tag { display:inline-block; background:var(--cream); border-radius:999px; padding:3px 8px; font-size:12px; margin:0 6px 6px 0; }
+    .list { margin-top:14px; }
+    .row-link { display:block; background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:8px; text-decoration:none; color:inherit; }
+    .row-link b { color:var(--navy); }
+    .note { margin-top:18px; font-size:13px; color:var(--mute); }
+    .note a { color:var(--navy); font-weight:700; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html"><img src="assets/logo-wordmark-cream.jpg" alt="Bob’s Song Lab" /></a>
+    <a class="back" href="index.html">← Lab home</a>
+  </header>
+  <h1>Word Spark</h1>
+  <p class="sub">Metaphors, similes, sayings, slang. Search by word, topic, feeling, or lesson. Copy into Notes. Your music only.</p>
+  <div class="wrap">
+    <div class="filters">
+      <div class="wide">
+        <label for="q">Word or phrase</label>
+        <input id="q" type="search" placeholder="bridge, ghost, harbor, fire…" />
+      </div>
+      <div>
+        <label for="topic">Topic</label>
+        <select id="topic"><option value="">Any topic</option></select>
+      </div>
+      <div>
+        <label for="feel">Feeling</label>
+        <select id="feel"><option value="">Any feeling</option></select>
+      </div>
+      <div>
+        <label for="typ">Type</label>
+        <select id="typ">
+          <option value="">Any type</option>
+          <option value="metaphor">Metaphor</option>
+          <option value="simile">Simile</option>
+          <option value="saying">Saying</option>
+          <option value="slang">Slang</option>
+        </select>
+      </div>
+      <div>
+        <label for="lesson">Lesson contains</label>
+        <input id="lesson" type="search" placeholder="when the night… when the road…" />
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="spark">Spark a line</button>
+      <button class="ghost" id="copy">Copy to Notes</button>
+    </div>
+    <p class="status" id="status"></p>
+    <div id="card"></div>
+    <div class="list" id="list"></div>
+    <p class="note">This is the first shelf — your list, tagged and searchable. We grow it toward 100,000 the same way: more lines, same drawers. <a href="spark.html">Idea Spark →</a></p>
+  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    let BANK = [];
+    let current = null;
+
+    function norm(s){ return String(s||'').toLowerCase(); }
+
+    function pool() {
+      const q = norm($('q').value);
+      const topic = $('topic').value;
+      const feel = $('feel').value;
+      const typ = $('typ').value;
+      const lesson = norm($('lesson').value);
+      return BANK.filter(e => {
+        if (topic && e.topic !== topic) return false;
+        if (feel && !(e.feelings||[]).includes(feel)) return false;
+        if (typ && !(e.types||[]).includes(typ)) return false;
+        if (lesson && !norm(e.lesson).includes(lesson)) return false;
+        if (q) {
+          const hay = norm(e.phrase + ' ' + e.topic + ' ' + (e.feelings||[]).join(' ') + ' ' + e.lesson);
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function show(e) {
+      current = e;
+      $('card').innerHTML = `
+        <div class="card">
+          <p class="meta">#${String(e.id).padStart(4,'0')} · ${(e.types||[]).join(' / ')} · ${e.topic}</p>
+          <p class="phrase">${e.phrase}</p>
+          <p class="lesson"><b>Use when</b> ${e.lesson}</p>
+          <div class="tags">${(e.feelings||[]).map(f => `<span class="tag">${f}</span>`).join('')}</div>
+        </div>`;
+    }
+
+    function renderList(list) {
+      $('status').textContent = list.length.toLocaleString() + ' lines in this filter';
+      const slice = list.slice(0, 40);
+      $('list').innerHTML = slice.map(e =>
+        `<a class="row-link" href="#${e.id}" data-id="${e.id}"><b>${e.phrase}</b><div class="meta">${e.topic} · ${(e.types||[]).join('/')}</div></a>`
+      ).join('') + (list.length > 40 ? `<p class="meta">Showing 40 of ${list.length}. Narrow the search or tap Spark for a random hit.</p>` : '');
+    }
+
+    function spark() {
+      const list = pool();
+      if (!list.length) { $('status').textContent = 'Nothing in that filter. Loosen one box.'; return; }
+      show(list[Math.floor(Math.random()*list.length)]);
+      renderList(list);
+      $('card').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    function copyBlock() {
+      if (!current) return;
+      const e = current;
+      const text = [
+        `BOB'S SONG LAB — Word Spark #${e.id}`,
+        e.phrase,
+        `Type: ${(e.types||[]).join(', ')}`,
+        `Topic: ${e.topic}`,
+        `Feeling: ${(e.feelings||[]).join(', ')}`,
+        `Use when: ${e.lesson}`,
+        ``,
+        `Your music only. BobsSongLab.com`
+      ].join('\n');
+      const done = () => { $('copy').textContent = 'Copied'; setTimeout(()=>$('copy').textContent='Copy to Notes', 1400); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(()=>fb(text,done));
+      else fb(text, done);
+    }
+    function fb(text, done) {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove(); done();
+    }
+
+    fetch('words.json').then(r => r.json()).then(data => {
+      BANK = data.entries || [];
+      (data.topics||[]).forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; $('topic').appendChild(o); });
+      (data.feelings||[]).forEach(f => { const o=document.createElement('option'); o.value=f; o.textContent=f; $('feel').appendChild(o); });
+      $('status').textContent = BANK.length.toLocaleString() + ' lines loaded';
+      const list = pool();
+      renderList(list);
+      if (list.length) show(list[Math.floor(Math.random()*list.length)]);
+    }).catch(() => { $('status').textContent = 'Could not load words.json'; });
+
+    $('spark').addEventListener('click', spark);
+    $('copy').addEventListener('click', copyBlock);
+    ['q','topic','feel','typ','lesson'].forEach(id => $(id).addEventListener('input', () => renderList(pool())));
+    ['topic','feel','typ'].forEach(id => $(id).addEventListener('change', () => renderList(pool())));
+    $('list').addEventListener('click', ev => {
+      const a = ev.target.closest('a[data-id]');
+      if (!a) return;
+      ev.preventDefault();
+      const e = BANK.find(x => String(x.id) === a.dataset.id);
+      if (e) show(e);
+    });
+  </script>
+</body>
+</html>
