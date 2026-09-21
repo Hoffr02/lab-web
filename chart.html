@@ -92,7 +92,10 @@
       <label for="file">Upload your wav / mp3 (whole song)</label>
       <input id="file" type="file" accept="audio/*,.wav,.mp3,.m4a,.aac" />
       <div class="row">
-        <button class="ghost" type="button" id="recStart">Or listen live</button>
+        <button class="primary" type="button" id="chartFile">Chart this file</button>
+      </div>
+      <div class="row">
+        <button class="ghost" type="button" id="recStart">Or listen live (needs https)</button>
         <button class="ghost" type="button" id="recStop">Stop and chart</button>
       </div>
       <p class="meta" id="listenStatus">Idle.</p>
@@ -285,21 +288,29 @@
       $('listenStatus').textContent = 'Whole take charted, ' + chords.length + ' bars. Proofread, then copy.';
     }
     async function decodeAndChart(arrayBuf) {
+      $('listenStatus').textContent = 'Decoding the bounce on this phone. Keep the page open…';
       const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) throw new Error('This Safari cannot decode audio here.');
       const ctx = new AC();
       if (ctx.state === 'suspended') await ctx.resume();
-      const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+      const copy = arrayBuf.slice ? arrayBuf.slice(0) : arrayBuf;
+      const audioBuf = await ctx.decodeAudioData(copy);
+      $('listenStatus').textContent = 'Heard ' + Math.round(audioBuf.duration) + ' seconds. Charting bars… 0%';
       const heard = await analyzeBuffer(audioBuf, pct => {
-        $('listenStatus').textContent = 'Charting the whole take on this phone… ' + pct + '%';
+        $('listenStatus').textContent = 'Charting the whole take… ' + pct + '%';
       });
       ctx.close();
-      if (!heard) { $('listenStatus').textContent = 'Could not hear clear chords. Play closer, or type them.'; return; }
+      if (!heard) { $('listenStatus').textContent = 'Could not hear clear chords. Try a wav bounce, or type them.'; return; }
       applyHeard(heard);
     }
 
     let recStream, rec, recChunks;
     $('recStart').addEventListener('click', async () => {
       try {
+        if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          $('listenStatus').textContent = 'Live mic needs the lock (https). This page says Not Secure. Use Chart this file instead.';
+          return;
+        }
         recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         recChunks = [];
         rec = new MediaRecorder(recStream);
@@ -324,17 +335,19 @@
       }
       rec = recStream = null;
     });
-    $('file').addEventListener('change', async ev => {
-      const file = ev.target.files && ev.target.files[0];
-      if (!file) return;
-      $('listenStatus').textContent = 'Reading ' + file.name + ' on this phone…';
+    async function chartChosenFile() {
+      const file = $('file').files && $('file').files[0];
+      if (!file) { $('listenStatus').textContent = 'Choose your wav or mp3 first.'; return; }
+      $('listenStatus').textContent = 'Reading ' + file.name + ' (' + Math.round(file.size/1000) + ' KB)…';
       try {
         const buf = await file.arrayBuffer();
         await decodeAndChart(buf);
       } catch (err) {
-        $('listenStatus').textContent = 'That file would not decode. Wav is safest. Or type the chords.';
+        $('listenStatus').textContent = 'Could not read that bounce: ' + (err.message || err) + '. Wav from the DAW is safest.';
       }
-    });
+    }
+    $('file').addEventListener('change', chartChosenFile);
+    $('chartFile').addEventListener('click', chartChosenFile);
 
     const sections = [];
     function barsOf(text) {
