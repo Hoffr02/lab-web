@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Write — Bob’s Song Lab</title>
+  <link rel="icon" href="assets/logo-badge-bsl.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --cream:#f4eee4; --paper:#fffaf2; --ink:#14233f; --navy:#0c1b3a; --gold:#d4a017; --line:#e4d8c4; --mute:#5b6780; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Source Sans 3",system-ui,sans-serif; background:var(--cream); color:var(--ink); line-height:1.45; }
+    header { text-align:center; padding:16px 16px 8px; }
+    header img { width:min(220px,70vw); height:auto; }
+    header a.back { display:block; font-size:13px; color:var(--navy); font-weight:700; text-decoration:none; margin-top:6px; }
+    h1 { font-family:Fraunces,Georgia,serif; font-size:26px; text-align:center; color:var(--navy); margin:8px 16px 4px; }
+    .sub { text-align:center; color:var(--mute); margin:0 16px 16px; font-size:15px; }
+    .wrap { max-width:720px; margin:0 auto; padding:0 14px 48px; }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:16px; margin-bottom:12px; }
+    h2 { font-family:Fraunces,Georgia,serif; font-size:20px; color:var(--navy); margin:0 0 10px; }
+    label { font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--mute); display:block; margin-top:10px; }
+    input, select, textarea { width:100%; margin-top:4px; padding:11px; border-radius:12px; border:1px solid var(--line); background:#fff; font:inherit; color:var(--ink); }
+    textarea { min-height:90px; resize:vertical; }
+    textarea.hook { min-height:64px; font-family:Fraunces,Georgia,serif; font-size:20px; }
+    button { font:inherit; font-weight:700; border:0; border-radius:999px; padding:12px 16px; cursor:pointer; }
+    button.primary { background:var(--navy); color:#fff; }
+    button.ghost { background:transparent; color:var(--navy); border:2px solid var(--navy); }
+    .row { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+    .row button { flex:1; min-width:140px; }
+    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .chip { border:1px solid var(--line); background:#fff; border-radius:999px; padding:6px 10px; font-size:13px; font-weight:700; color:var(--navy); }
+    .chip.on { background:var(--navy); color:#fff; border-color:var(--navy); }
+    .prompt { font-size:14px; color:var(--mute); margin:6px 0 0; }
+    .meta { font-size:13px; color:var(--mute); }
+    pre { white-space:pre-wrap; background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px; font:inherit; font-size:14px; }
+    a { color:var(--navy); font-weight:700; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html"><img src="assets/logo-wordmark-cream.jpg" alt="Bob’s Song Lab" /></a>
+    <a class="back" href="index.html">← Lab home</a>
+  </header>
+  <h1>3. Write</h1>
+  <p class="sub">Hook. Structure. One Notes block so the idea survives the rest of the day. Your music only.</p>
+
+  <div class="wrap">
+    <div class="card">
+      <h2>The card</h2>
+      <label for="title">Working title</label>
+      <input id="title" placeholder="The porch light, or leave blank" />
+      <label for="feel">Feeling</label>
+      <input id="feel" placeholder="homesick, stubborn, grateful…" />
+      <label for="hook">Hook / last line of the chorus</label>
+      <textarea class="hook" id="hook" placeholder="The one line they walk out of the room still singing"></textarea>
+      <div class="row">
+        <button class="ghost" type="button" id="wordHook">Spark a line from Word Spark</button>
+        <a class="ghost" href="words.html" style="display:inline-block;padding:12px 16px;border-radius:999px;border:2px solid #0c1b3a;text-align:center;">Open Word Spark</a>
+      </div>
+      <p class="prompt" id="hookHint"></p>
+    </div>
+
+    <div class="card">
+      <h2>Structure</h2>
+      <p class="meta">Pick the shape. Empty boxes appear. Fill only what you have.</p>
+      <div class="chips" id="structs"></div>
+      <p class="prompt" id="structHint"></p>
+    </div>
+
+    <div id="sections"></div>
+
+    <div class="card">
+      <h2>Notes block</h2>
+      <p class="meta">This is what you paste into iPhone Notes. Date, hook, sections, and a reminder to play it.</p>
+      <div class="row">
+        <button class="primary" type="button" id="build">Build Notes block</button>
+        <button class="ghost" type="button" id="copy">Copy to Notes</button>
+      </div>
+      <pre id="out">Tap Build Notes block.</pre>
+      <p class="meta" style="margin-top:10px">
+        <a href="spark.html">Idea Spark</a> ·
+        <a href="play.html">Play bench</a> ·
+        <a href="chords.html">Chord book</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const FORMS = {
+      'Verse / Chorus': {
+        hint: 'Say it, then sing the thing you came to say.',
+        parts: ['Verse 1', 'Chorus', 'Verse 2', 'Chorus']
+      },
+      'Verse / Chorus / Bridge': {
+        hint: 'Two rooms, the hallway, then back to the hook.',
+        parts: ['Verse 1', 'Chorus', 'Verse 2', 'Chorus', 'Bridge', 'Chorus']
+      },
+      'Story song (V V V)': {
+        hint: 'Keep walking. The hook can hide in the last line of each verse.',
+        parts: ['Verse 1', 'Verse 2', 'Verse 3']
+      },
+      'AABA': {
+        hint: 'Same street twice, a side door, then home.',
+        parts: ['A1 (verse)', 'A2 (verse)', 'B (bridge)', 'A3 (verse)']
+      },
+      '12-bar sketch': {
+        hint: 'One idea, three lines. Line three answers or twists.',
+        parts: ['Line 1 (4 bars)', 'Line 2 (4 bars)', 'Line 3 / turnaround (4 bars)']
+      }
+    };
+    const PROMPTS = {
+      'Verse 1': 'Where are we. Who is talking. One picture.',
+      'Verse 2': 'Time has passed, or the other person speaks.',
+      'Verse 3': 'The cost, or the choice.',
+      'Chorus': 'The title idea in plain talk. Repeat the hook.',
+      'Bridge': 'New angle. Do not repeat the chorus words.',
+      'A1 (verse)': 'First pass down the street.',
+      'A2 (verse)': 'Same street, one new detail.',
+      'B (bridge)': 'The side door.',
+      'A3 (verse)': 'Home, changed.',
+      'Line 1 (4 bars)': 'State the trouble.',
+      'Line 2 (4 bars)': 'Say it again a little harder.',
+      'Line 3 / turnaround (4 bars)': 'The twist or the punchline.'
+    };
+
+    let form = 'Verse / Chorus / Bridge';
+    let words = [];
+
+    function chips() {
+      $('structs').innerHTML = Object.keys(FORMS).map(k =>
+        `<button class="chip${k===form?' on':''}" type="button" data-k="${k}">${k}</button>`
+      ).join('');
+      $('structHint').textContent = FORMS[form].hint;
+    }
+    function sections() {
+      $('sections').innerHTML = FORMS[form].parts.map((p,i) => `
+        <div class="card">
+          <h2>${p}</h2>
+          <p class="prompt">${PROMPTS[p] || ''}</p>
+          <textarea id="p${i}" data-part="${p}" placeholder="Write ugly. Fix it later."></textarea>
+        </div>`).join('');
+    }
+    $('structs').addEventListener('click', ev => {
+      const b = ev.target.closest('[data-k]');
+      if (!b) return;
+      form = b.dataset.k;
+      chips(); sections();
+    });
+    chips(); sections();
+
+    fetch('words.json').then(r => r.json()).then(d => { words = d.entries || []; }).catch(() => {});
+
+    $('wordHook').addEventListener('click', () => {
+      if (!words.length) { $('hookHint').textContent = 'Word Spark is not loaded yet. Open it and copy a line by hand.'; return; }
+      const feel = ($('feel').value || '').toLowerCase().trim();
+      let pool = words;
+      if (feel) pool = words.filter(w => (w.feelings||[]).some(f => f.includes(feel)) || (w.phrase||'').toLowerCase().includes(feel) || (w.topic||'').toLowerCase().includes(feel));
+      if (!pool.length) pool = words;
+      const w = pool[Math.floor(Math.random()*pool.length)];
+      const line = w.phrase;
+      const cur = $('hook').value.trim();
+      $('hook').value = cur ? cur + '\n' + line : line;
+      $('hookHint').textContent = `#${w.id} · ${w.topic} · ${w.lesson}`;
+    });
+
+    function block() {
+      const title = $('title').value.trim() || 'Untitled';
+      const feel = $('feel').value.trim();
+      const hook = $('hook').value.trim();
+      const when = new Date().toLocaleString();
+      const parts = [...document.querySelectorAll('textarea[data-part]')].map(el => {
+        const body = el.value.trim();
+        return body ? `${el.dataset.part.toUpperCase()}\n${body}` : null;
+      }).filter(Boolean);
+      return [
+        `BOB'S SONG LAB — Write`,
+        `Title: ${title}`,
+        feel ? `Feeling: ${feel}` : null,
+        `Shape: ${form}`,
+        `Date: ${when}`,
+        hook ? `\nHOOK\n${hook}` : null,
+        parts.length ? '\n' + parts.join('\n\n') : '\n(sections still empty)',
+        `\nPlay it on the bench. Chord book if you need a shape.`,
+        `Your music only. BobsSongLab.com`
+      ].filter(v => v !== null).join('\n');
+    }
+
+    $('build').addEventListener('click', () => { $('out').textContent = block(); });
+    $('copy').addEventListener('click', () => {
+      const text = block();
+      $('out').textContent = text;
+      const done = () => { $('copy').textContent = 'Copied'; setTimeout(()=>$('copy').textContent='Copy to Notes', 1400); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(()=>fb(text,done));
+      else fb(text, done);
+    });
+    function fb(text, done) {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove(); done();
+    }
+  </script>
+</body>
+</html>
