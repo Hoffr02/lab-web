@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chart My Song — Bob’s Song Lab</title>
+  <link rel="icon" href="assets/logo-badge-bsl.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --cream:#f4eee4; --paper:#fffaf2; --ink:#14233f; --navy:#0c1b3a; --gold:#d4a017; --line:#e4d8c4; --mute:#5b6780; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Source Sans 3",system-ui,sans-serif; background:var(--cream); color:var(--ink); line-height:1.45; }
+    header { text-align:center; padding:16px 16px 8px; }
+    header img { width:min(220px,70vw); height:auto; }
+    header a.back { display:block; font-size:13px; color:var(--navy); font-weight:700; text-decoration:none; margin-top:6px; }
+    h1 { font-family:Fraunces,Georgia,serif; font-size:26px; text-align:center; color:var(--navy); margin:8px 16px 4px; }
+    .sub { text-align:center; color:var(--mute); margin:0 16px 16px; font-size:15px; }
+    .wrap { max-width:720px; margin:0 auto; padding:0 14px 48px; }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:16px; margin-bottom:12px; }
+    h2 { font-family:Fraunces,Georgia,serif; font-size:20px; color:var(--navy); margin:0 0 10px; }
+    label { font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--mute); display:block; margin-top:10px; }
+    input, select, textarea { width:100%; margin-top:4px; padding:11px; border-radius:12px; border:1px solid var(--line); background:#fff; font:inherit; color:var(--ink); }
+    textarea { min-height:88px; resize:vertical; font-family:ui-monospace,Menlo,monospace; font-size:15px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    button { font:inherit; font-weight:700; border:0; border-radius:999px; padding:12px 16px; cursor:pointer; }
+    button.primary { background:var(--navy); color:#fff; }
+    button.ghost { background:transparent; color:var(--navy); border:2px solid var(--navy); }
+    .row { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+    .row button { flex:1; min-width:140px; }
+    .meta { font-size:13px; color:var(--mute); margin:8px 0 0; }
+    pre { white-space:pre-wrap; background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px; font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+    a { color:var(--navy); font-weight:700; text-decoration:none; }
+    .bars { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .bar { background:#fff; border:1px solid var(--line); border-radius:12px; padding:8px 10px; min-width:72px; text-align:center; }
+    .bar b { display:block; color:var(--navy); }
+    .bar span { font-size:12px; color:var(--mute); }
+    .warn { font-size:13px; color:#8a5a10; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html"><img src="assets/logo-wordmark-cream.jpg" alt="Bob’s Song Lab" /></a>
+    <a class="back" href="index.html">← Lab home</a>
+  </header>
+  <h1>4. Chart My Song</h1>
+  <p class="sub">Play your song into the phone, drop your wav/mp3, or type the chords. The file never leaves this device. Not for other people’s records.</p>
+
+  <div class="wrap">
+    <div class="card">
+      <h2>The song</h2>
+      <label for="title">Title</label>
+      <input id="title" placeholder="Working title" />
+      <div class="grid">
+        <div>
+          <label for="key">Key</label>
+          <select id="key"></select>
+        </div>
+        <div>
+          <label for="mode">Mode</label>
+          <select id="mode">
+            <option value="major">Major</option>
+            <option value="minor">Minor</option>
+          </select>
+        </div>
+        <div>
+          <label for="capo">Capo</label>
+          <select id="capo">
+            <option value="0">None</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>4</option><option>5</option><option>6</option><option>7</option>
+          </select>
+        </div>
+        <div>
+          <label for="tuning">Tuning</label>
+          <select id="tuning">
+            <option>Standard</option>
+            <option>Drop D</option>
+            <option>Open G</option>
+            <option>Open D</option>
+            <option>DADGAD</option>
+          </select>
+        </div>
+      </div>
+      <p class="meta">Capo is for the player. Nashville is counted in the sounding key you pick above.</p>
+    </div>
+
+    <div class="card">
+      <h2>Listen to my song</h2>
+      <p class="meta">Bounce YOUR song from the DAW — wav or mp3 of the whole mix. One file, bar by bar, on this phone. Nothing is uploaded to a server. Proofread before you send it to a buyer.</p>
+      <label for="file">Upload your wav / mp3 (whole song)</label>
+      <input id="file" type="file" accept="audio/*,.wav,.mp3,.m4a,.aac" />
+      <div class="row">
+        <button class="ghost" type="button" id="recStart">Or listen live</button>
+        <button class="ghost" type="button" id="recStop">Stop and chart</button>
+      </div>
+      <p class="meta" id="listenStatus">Idle.</p>
+      <p class="warn">If the recording is not yours, do not use this box.</p>
+    </div>
+
+    <div class="card">
+      <h2>Your chords</h2>
+      <p class="meta">One section at a time. Use | between bars. Example: Am | F | C | G</p>
+      <label for="section">Section name</label>
+      <input id="section" value="Full song" />
+      <label for="prog">Bars</label>
+      <textarea id="prog" placeholder="Am | F | C | G"></textarea>
+      <div class="row">
+        <button class="primary" type="button" id="add">Add section</button>
+        <button class="ghost" type="button" id="clear">Clear chart</button>
+      </div>
+      <p class="warn">Do not paste a chart you copied off someone else’s song. This desk is for what you wrote.</p>
+    </div>
+
+    <div class="card">
+      <h2>Chart</h2>
+      <div id="visual"></div>
+      <pre id="out">Add a section to build the chart.</pre>
+      <div class="row">
+        <button class="primary" type="button" id="copy">Copy to Notes</button>
+        <a class="ghost" href="chords.html" style="display:inline-block;padding:12px 16px;border-radius:999px;border:2px solid #0c1b3a;text-align:center;">Chord book</a>
+      </div>
+      <p class="meta"><a href="write.html">Write desk</a> · <a href="play.html">Play bench</a> · <a href="spark.html">Idea Spark</a></p>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const NOTES = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+    const ALIAS = {DB:'C#',DFLAT:'C#','C#':'C#',EB:'Eb',EFLAT:'Eb',GB:'F#',GFLAT:'F#','F#':'F#',AB:'Ab',AFLAT:'Ab',BB:'Bb',BFLAT:'Bb'};
+    NOTES.forEach(n => { const o=document.createElement('option'); o.value=n; o.textContent=n; $('key').appendChild(o); });
+    $('key').value = 'G';
+
+    function idx(name) {
+      const u = name.replace('♭','b').replace('♯','#').toUpperCase();
+      if (NOTES.includes(name)) return NOTES.indexOf(name);
+      if (ALIAS[u]) return NOTES.indexOf(ALIAS[u]);
+      if (NOTES.includes(u)) return NOTES.indexOf(u);
+      return -1;
+    }
+    function parseChord(tok) {
+      tok = tok.trim();
+      if (!tok || tok === '%' || tok === '-' || tok === '/') return { raw: tok, root: null, rest: '', nashville: tok };
+      const m = tok.match(/^([A-G](?:#|b|♯|♭)?)(.*)$/i);
+      if (!m) return { raw: tok, root: null, rest: '', nashville: tok };
+      let root = m[1];
+      if (root.length === 2) root = root[0].toUpperCase() + root[1].toLowerCase();
+      else root = root.toUpperCase();
+      if (root.endsWith('b')) {
+        const map = {Db:'C#',Eb:'Eb',Gb:'F#',Ab:'Ab',Bb:'Bb',Cb:'B'};
+        root = map[root] || root;
+      }
+      return { raw: tok, root, rest: m[2] };
+    }
+    function qualityNum(rest) {
+      const r = rest.replace(/\s+/g,'');
+      if (/^m7b5|^ø/.test(r)) return 'm7b5';
+      if (/^maj7|^Δ|^M7/.test(r)) return 'maj7';
+      if (/^m7/.test(r)) return 'm7';
+      if (/^dim|^°/.test(r)) return 'dim';
+      if (/^aug|^\+/.test(r)) return 'aug';
+      if (/^sus/.test(r)) return 'sus';
+      if (/^m(?!aj)/.test(r) || /^min/.test(r)) return 'm';
+      if (/^7/.test(r)) return '7';
+      if (/^6/.test(r)) return '6';
+      if (/^9|^add9/.test(r)) return r.replace(/^\s+/,'');
+      return r;
+    }
+    function nashvilleOf(chord, key, mode) {
+      if (!chord.root) return chord.raw;
+      const k = idx(key);
+      const r = idx(chord.root);
+      if (k < 0 || r < 0) return chord.raw;
+      const st = (r - k + 12) % 12;
+      const majorMap = {0:'1',1:'b2',2:'2',3:'b3',4:'3',5:'4',6:'#4',7:'5',8:'b6',9:'6',10:'b7',11:'7'};
+      let num = majorMap[st];
+      if (mode === 'minor') {
+        const minMap = {0:'1',1:'b2',2:'2',3:'b3',4:'3',5:'4',6:'#4',7:'5',8:'b6',9:'6',10:'b7',11:'7'};
+        num = minMap[st];
+      }
+      const q = qualityNum(chord.rest);
+      let out = num;
+      if (q === 'm' || q === 'min') out = num + 'm';
+      else if (q === '7') out = num + '7';
+      else if (q === 'm7') out = num + 'm7';
+      else if (q === 'maj7') out = num + 'maj7';
+      else if (q === 'dim') out = num + 'dim';
+      else if (q === 'aug') out = num + '+';
+      else if (q === 'sus') out = num + chord.rest;
+      else if (q) out = num + q;
+      const slash = chord.rest.match(/\/([A-G](?:#|b)?)/);
+      if (slash) {
+        const bass = parseChord(slash[1]);
+        const bn = nashvilleOf({ raw: slash[1], root: bass.root, rest: '' }, key, mode);
+        out += '/' + bn;
+      }
+      return out;
+    }
+
+    const CHROMA_TEMPLATES = [];
+    (function buildTemplates() {
+      const names = NOTES;
+      names.forEach((n, i) => {
+        const maj = new Array(12).fill(0);
+        maj[i] = 1; maj[(i+4)%12] = 1; maj[(i+7)%12] = 1;
+        const minr = new Array(12).fill(0);
+        minr[i] = 1; minr[(i+3)%12] = 1; minr[(i+7)%12] = 1;
+        const sev = maj.slice(); sev[(i+10)%12] = 0.8;
+        CHROMA_TEMPLATES.push({ name: n, chroma: maj });
+        CHROMA_TEMPLATES.push({ name: n + 'm', chroma: minr });
+        CHROMA_TEMPLATES.push({ name: n + '7', chroma: sev });
+      });
+    })();
+    function dot(a, b) {
+      let s = 0; for (let i = 0; i < 12; i++) s += a[i] * b[i];
+      return s;
+    }
+    function downsample(data, sr, target) {
+      const ratio = Math.max(1, Math.round(sr / target));
+      const out = new Float32Array(Math.floor(data.length / ratio));
+      for (let i = 0; i < out.length; i++) out[i] = data[i * ratio];
+      return { data: out, sr: sr / ratio };
+    }
+    function chromaOf(frame, sr) {
+      const n = frame.length;
+      const spec = new Array(12).fill(0);
+      // naive DFT on a downsampled slice — good enough for cowboy chords
+      const step = Math.max(1, Math.floor(n / 1024));
+      for (let k = 0; k < 12; k++) {
+        // sum energy near that pitch class across octaves 2-5
+        for (let oct = 2; oct <= 5; oct++) {
+          const freq = 440 * Math.pow(2, (k - 9) / 12 + (oct - 4));
+          let re = 0, im = 0;
+          const w = 2 * Math.PI * freq / sr;
+          for (let i = 0; i < n; i += step) {
+            re += frame[i] * Math.cos(w * i);
+            im -= frame[i] * Math.sin(w * i);
+          }
+          spec[k] += re * re + im * im;
+        }
+      }
+      const mx = Math.max(...spec, 1e-9);
+      return spec.map(v => v / mx);
+    }
+    function bestChord(chroma) {
+      let name = 'N.C.', score = 0;
+      CHROMA_TEMPLATES.forEach(t => {
+        const s = dot(chroma, t.chroma);
+        if (s > score) { score = s; name = t.name; }
+      });
+      return score > 0.9 ? name : name;
+    }
+    async function analyzeBuffer(audioBuf, onProg) {
+      const raw = audioBuf.getChannelData(0);
+      const ds = downsample(raw, audioBuf.sampleRate, 11025);
+      const sr = ds.sr, data = ds.data;
+      const win = Math.floor(sr * 2.0);
+      const hop = Math.floor(sr * 2.0);
+      const names = [];
+      const last = Math.max(1, data.length - win);
+      for (let start = 0, n = 0; start <= last; start += hop, n++) {
+        const slice = data.subarray(start, start + win);
+        let rms = 0;
+        for (let i = 0; i < slice.length; i++) rms += slice[i] * slice[i];
+        rms = Math.sqrt(rms / slice.length);
+        names.push(rms < 0.006 ? 'N.C.' : bestChord(chromaOf(slice, sr)));
+        if (onProg && n % 2 === 0) {
+          onProg(Math.min(99, Math.round((start / last) * 100)));
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+      let a = 0, b = names.length;
+      while (a < b && names[a] === 'N.C.') a++;
+      while (b > a && names[b - 1] === 'N.C.') b--;
+      const usable = names.slice(a, b);
+      return usable.length ? usable : null;
+    }
+    function applyHeard(chords) {
+      sections.push({ name: $('section').value.trim() || 'Full song', bars: chords });
+      const lines = [];
+      for (let i = 0; i < chords.length; i += 4) lines.push(chords.slice(i, i + 4).join(' | '));
+      $('prog').value = lines.join('\n');
+      render();
+      $('listenStatus').textContent = 'Whole take charted, ' + chords.length + ' bars. Proofread, then copy.';
+    }
+    async function decodeAndChart(arrayBuf) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AC();
+      if (ctx.state === 'suspended') await ctx.resume();
+      const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+      const heard = await analyzeBuffer(audioBuf, pct => {
+        $('listenStatus').textContent = 'Charting the whole take on this phone… ' + pct + '%';
+      });
+      ctx.close();
+      if (!heard) { $('listenStatus').textContent = 'Could not hear clear chords. Play closer, or type them.'; return; }
+      applyHeard(heard);
+    }
+
+    let recStream, rec, recChunks;
+    $('recStart').addEventListener('click', async () => {
+      try {
+        recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recChunks = [];
+        rec = new MediaRecorder(recStream);
+        rec.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+        rec.start();
+        $('listenStatus').textContent = 'Listening to the whole take. Play YOUR song. Stop when that section is done, change the section name, go again.';
+      } catch (err) {
+        $('listenStatus').textContent = 'Mic error: ' + (err.message || err);
+      }
+    });
+    $('recStop').addEventListener('click', async () => {
+      if (!rec) return;
+      await new Promise(res => { rec.onstop = res; rec.stop(); });
+      recStream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(recChunks);
+      $('listenStatus').textContent = 'Charting on this phone…';
+      try {
+        const buf = await blob.arrayBuffer();
+        await decodeAndChart(buf);
+      } catch (err) {
+        $('listenStatus').textContent = 'Could not decode that take. Try a wav/mp3 upload, or type the chords.';
+      }
+      rec = recStream = null;
+    });
+    $('file').addEventListener('change', async ev => {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      $('listenStatus').textContent = 'Reading ' + file.name + ' on this phone…';
+      try {
+        const buf = await file.arrayBuffer();
+        await decodeAndChart(buf);
+      } catch (err) {
+        $('listenStatus').textContent = 'That file would not decode. Wav is safest. Or type the chords.';
+      }
+    });
+
+    const sections = [];
+    function barsOf(text) {
+      return text.split(/\|/).map(s => s.trim()).filter(Boolean);
+    }
+    function render() {
+      if (!sections.length) {
+        $('visual').innerHTML = '';
+        $('out').textContent = 'Add a section to build the chart.';
+        return;
+      }
+      const key = $('key').value;
+      const mode = $('mode').value;
+      let html = '';
+      let text = [
+        `BOB'S SONG LAB — Chart My Song`,
+        `Title: ${$('title').value.trim() || 'Untitled'}`,
+        `Key: ${key} ${mode} · Capo: ${$('capo').value} · Tuning: ${$('tuning').value}`,
+        ``
+      ];
+      sections.forEach(sec => {
+        html += `<p class="meta" style="margin-top:12px"><b>${sec.name}</b></p><div class="bars">`;
+        text.push(sec.name.toUpperCase());
+        const letterLine = [];
+        const nashLine = [];
+        const slashLine = [];
+        sec.bars.forEach(bar => {
+          const chords = bar.split(/\s+/).filter(Boolean).map(parseChord);
+          const letters = chords.map(c => c.raw).join(' ');
+          const nash = chords.map(c => nashvilleOf(c, key, mode)).join(' ');
+          const slashes = chords.map(() => '/ / / /').join('  ');
+          html += `<a class="bar" href="chords.html?q=${encodeURIComponent(chords[0] ? chords[0].raw.split('/')[0] : '')}"><b>${letters}</b><span>${nash}</span></a>`;
+          letterLine.push(letters);
+          nashLine.push(nash);
+          slashLine.push(slashes || '/ / / /');
+        });
+        html += `</div>`;
+        text.push('| ' + letterLine.join(' | ') + ' |');
+        text.push('Nashville: | ' + nashLine.join(' | ') + ' |');
+        text.push(slashLine.join(' | '));
+        text.push('');
+      });
+      text.push('Your music only. BobsSongLab.com');
+      $('visual').innerHTML = html;
+      $('out').textContent = text.join('\n');
+    }
+
+    $('add').addEventListener('click', () => {
+      const bars = barsOf($('prog').value);
+      if (!bars.length) return;
+      sections.push({ name: $('section').value.trim() || 'Section', bars });
+      render();
+    });
+    $('clear').addEventListener('click', () => { sections.length = 0; render(); });
+    ['key','mode','capo','tuning','title'].forEach(id => $(id).addEventListener('change', render));
+    $('copy').addEventListener('click', () => {
+      render();
+      const text = $('out').textContent;
+      const done = () => { $('copy').textContent = 'Copied'; setTimeout(()=>$('copy').textContent='Copy to Notes', 1400); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(()=>fb(text,done));
+      else fb(text, done);
+    });
+    function fb(text, done) {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove(); done();
+    }
+  </script>
+</body>
+</html>
